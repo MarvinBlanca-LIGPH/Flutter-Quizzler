@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'quiz_brain.dart';
+import 'package:provider/provider.dart';
+import 'package:quizzler/quiz_data.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
-
-QuizBrain quizBrain = QuizBrain();
 
 void main() => runApp(Quizzler());
 
 class Quizzler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        backgroundColor: Colors.grey.shade900,
-        body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.0),
-            child: QuizPage(),
+    return ChangeNotifierProvider<QuizData>(
+      create: (_) => QuizData(),
+      child: MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.grey.shade900,
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: QuizPage(),
+            ),
           ),
         ),
       ),
@@ -23,53 +25,28 @@ class Quizzler extends StatelessWidget {
   }
 }
 
-class QuizPage extends StatefulWidget {
+class QuizPage extends StatelessWidget {
   @override
-  _QuizPageState createState() => _QuizPageState();
-}
-
-class _QuizPageState extends State<QuizPage> {
-  List<Icon> scoreIcon = [];
-  int correctAnswers = 0;
-
-  void validateAnswer(bool answer) {
-    setState(() {
-      if (quizBrain.isFinish()) {
-        calculateScore(answer);
+  Widget build(BuildContext context) {
+    final provider = Provider.of<QuizData>(context);
+    void validateAnswer(bool answer) {
+      if (provider.isFinish()) {
+        provider.calculateScore(answer);
 
         Alert(
           context: context,
           title: 'Quiz complete!!',
-          desc: 'Your score is: $correctAnswers',
+          desc: 'Your score is: ${provider.correctAnswers}',
         ).show();
 
-        quizBrain.resetQuiz();
-        scoreIcon = [];
-        correctAnswers = 0;
+        provider.resetQuiz();
+        provider.resetQuiz();
       } else {
-        calculateScore(answer);
-        quizBrain.nextQuestion();
+        provider.calculateScore(answer);
+        provider.nextQuestion();
       }
-    });
-  }
-
-  void calculateScore(bool answer) {
-    if (quizBrain.getAnswers() == answer) {
-      correctAnswers++;
-      scoreIcon.add(Icon(
-        Icons.check,
-        color: Colors.green,
-      ));
-    } else {
-      scoreIcon.add(Icon(
-        Icons.close,
-        color: Colors.red,
-      ));
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +57,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                quizBrain.getQuestions(),
+                provider.getQuestions(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -131,7 +108,7 @@ class _QuizPageState extends State<QuizPage> {
           ),
         ),
         Row(
-          children: scoreIcon,
+          children: provider.scoreIcon,
         )
       ],
     );
